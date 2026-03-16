@@ -10,6 +10,7 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { signOut } from "firebase/auth";
+import{query,where} from "firebase/firestore"
 
 function Todo() {
   const [todos, setTodos] = useState([]);
@@ -19,8 +20,14 @@ function Todo() {
   const [editId, setEditId] = useState(null);
 
   const fetchTodos = async () => {
+    const q =query(
+      collection(db,"todos"),
+      where("uid","==",auth.currentUser.uid)
+    );
+
     //Firestoreからデータを取得
-    const col = await getDocs(collection(db, "todos"));
+    // const col = await getDocs(collection(db, "todos"));
+    const col =await getDocs(q);
     // console.log(col.docs);
     // console.log(col.docs[0].id)
     const todoList = col.docs.map((doc) => ({
@@ -38,21 +45,23 @@ function Todo() {
       alert("空文字では入力することはできません");
       return;
     }
+    console.log(auth.currentUser);
 
     // setTodos([...todos,text]);
     await addDoc(collection(db, "todos"), {
       //Firestoreのtodosフォルダ   //
       text: text,
       completed: false,
+      uid:auth.currentUser.uid, //今ログインしている人のユーザID
     });
-    fetchTodos();
+    await fetchTodos();
     setText("");
     // console.log(todos);
   };
 
   const handleDelete = async (id) => {
     await deleteDoc(doc(db, "todos", id));
-    await fetchTodos(); //
+    await fetchTodos(); 
   };
 
   const handleEdit = (todo) => {
@@ -89,6 +98,10 @@ function Todo() {
       handleClick();
     }
   };
+
+  useEffect(()=>{
+    fetchTodos();
+  },[]);
 
   return (
     <>
