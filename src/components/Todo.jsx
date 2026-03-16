@@ -21,26 +21,32 @@ function Todo() {
   const fetchTodos = async () => {
     //Firestoreからデータを取得
     const col = await getDocs(collection(db, "todos"));
-    console.log(col.docs);
+    // console.log(col.docs);
     // console.log(col.docs[0].id)
     const todoList = col.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(), //{}を一つにしたいから展開しているイメージ
     }));
+    // console.log(col.docs)
     // console.log(col.docs[0].data()). //０番目の中身を取り出す
-    // console.log(todoList)
+    // console.log(todoList);
     setTodos(todoList); //reactのstate更新
   };
 
   const handleClick = async () => {
+    if (text.trim() === "") {
+      alert("空文字では入力することはできません");
+      return;
+    }
+
     // setTodos([...todos,text]);
     await addDoc(collection(db, "todos"), {
       //Firestoreのtodosフォルダ   //
       text: text,
       completed: false,
     });
-    setText("");
     fetchTodos();
+    setText("");
     // console.log(todos);
   };
 
@@ -78,6 +84,12 @@ function Todo() {
     await signOut(auth);
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleClick();
+    }
+  };
+
   return (
     <>
       <div>
@@ -86,6 +98,7 @@ function Todo() {
           className="input"
           value={text}
           onChange={(event) => handleChange(event)}
+          onKeyDown={handleKeyDown}
         ></input>
         {editId ? (
           <button onClick={handleUpdate}>更新</button>
